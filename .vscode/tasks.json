@@ -1,0 +1,169 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build all",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build run",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/ViberFitBot.WebApi/",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/ViberFitBot.WebApi/",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary",
+                "--no-build"
+            ],
+            "dependsOn": "build run",
+            "problemMatcher": []
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/ViberFitBot.WebApi/"
+            ],
+            "dependsOn": "build run",
+            "problemMatcher": []
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "--no-build"
+            ],
+            "dependsOn": "build all",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "migration add",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "ef",
+                "migrations",
+                "add",
+                "${input:migrationName}",
+                "--no-build",
+                "--project",
+                "${workspaceFolder}/ViberFitBot.WebApi/"
+            ],
+            "problemMatcher": [],
+            "dependsOn": [
+                "build run"
+            ]
+        },
+        {
+            "label": "migration remove",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "ef",
+                "migrations",
+                "remove",
+                "--no-build",
+                "--project",
+                "${workspaceFolder}/ViberFitBot.WebApi/"
+            ],
+            "problemMatcher": [],
+            "dependsOn": [
+                "build run"
+            ]
+        },
+        {
+            "label": "database update latest",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "ef",
+                "database",
+                "update",
+                "--no-build",
+                "--project",
+                "${workspaceFolder}/ViberFitBot.WebApi/"
+            ],
+            "problemMatcher": [],
+            "dependsOn": [
+                "build run"
+            ]
+        },
+        {
+            "label": "database update to",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "ef",
+                "database",
+                "update",
+                "${input:migrationName}",
+                "--no-build",
+                "--project",
+                "${workspaceFolder}/ViberFitBot.WebApi/"
+            ],
+            "problemMatcher": [],
+            "dependsOn": [
+                "build run"
+            ]
+        },
+        {
+            "label": "database drop",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "ef",
+                "database",
+                "drop",
+                "--no-build",
+                "--project",
+                "${workspaceFolder}/ViberFitBot.WebApi/"
+            ],
+            "problemMatcher": [],
+            "dependsOn": [
+                "build run"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "migrationName",
+            "type": "promptString",
+            "description": "Migration name"
+        }
+    ]
+}

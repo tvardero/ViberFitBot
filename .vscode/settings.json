@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/9a6b889c-4bc0-4c9f-bfcb-6aa3a0b5dde5/microsoft.web/sites/subscriptions/9a6b889c-4bc0-4c9f-bfcb-6aa3a0b5dde5/resourceGroups/ViberFitBot_ResourceGroup/providers/Microsoft.Web/sites/ViberFitBot",
+    "appService.deploySubpath": "ViberFitBot.WebApi\\bin\\Debug\\net6.0\\publish"
+}
