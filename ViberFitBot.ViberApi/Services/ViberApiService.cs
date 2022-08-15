@@ -1,5 +1,3 @@
-using System.Text;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using ViberFitBot.ViberApi.Infrastructure;
 using ViberFitBot.ViberApi.Models;
 using ViberFitBot.ViberApi.Resources;
@@ -11,11 +9,10 @@ public class ViberApiService
 {
     public static Dictionary<string, DialogState> State { get; } = new();
 
-    public ViberApiService(ViberApiHttpClient httpClient, TrackService service, ILogger<ViberApiService> logger)
+    public ViberApiService(ViberApiHttpClient httpClient, ITrackService service, ILogger<ViberApiService> logger)
     {
         _httpClient = httpClient;
         _service = service;
-        _logger = logger;
     }
 
     // Handles both "conversation_started" and "subscribed" events
@@ -59,9 +56,9 @@ public class ViberApiService
                     {
                         switch (text)
                         {
-                            case Actions.Top10Action:
+                            case Actions.Top5Action:
                                 {
-                                    dialogState.State = DialogState.StateEnum.Top10_WaitingForImei;
+                                    dialogState.State = DialogState.StateEnum.Top5_WaitingForImei;
                                     await _httpClient.SendTextMessageAsync(userId, Responses.EnterImei, Keyboards.CancelKeyboard);
                                     break;
                                 }
@@ -85,12 +82,12 @@ public class ViberApiService
                         }
                         break;
                     }
-                case DialogState.StateEnum.Top10_WaitingForImei:
+                case DialogState.StateEnum.Top5_WaitingForImei:
                     {
                         if (ulong.TryParse(text, out var imei))
                         {
-                            var top10 = await _service.GetTop10TracksAsync(imei.ToString());
-                            var table = GenerateTableOfTop10Tracks(3, top10);
+                            var top5 = await _service.GetTop5TracksAsync(imei.ToString());
+                            var table = GenerateTableOfTop10Tracks(3, top5);
                             await _httpClient.SendRichMediaMessageAsync(userId, table);
                         }
                         else if (text.ToLower() != "cancel")
@@ -164,37 +161,97 @@ public class ViberApiService
         State[userId] = dialogState;
     }
 
-    private InteractiveMedia GenerateTableOfTop10Tracks(double utcOffset, IEnumerable<Track> statistics)
+    private static InteractiveMedia GenerateTableOfTop10Tracks(double utcOffset, IEnumerable<Track> statistics)
     {
-        var tableHtml = new StringBuilder("<table><thead><th>Date</th><th>Distance in metres</th><th>Duration</th></thead><tbody>");
-
-        foreach (var stat in statistics)
-        {
-            tableHtml.Append($"<td>{stat.StartTimeUtc.AddHours(utcOffset).ToString("dd.MM.yy hh:mm")}</td>");
-            tableHtml.Append($"<td>{stat.DistanceMetres:N0}</td>");
-            tableHtml.Append($"<td>{stat.Duration:G}</td>");
-        }
-
-        tableHtml.Append("</tbody></table>");
-
-        _logger.LogInformation("Created table: {tableHtml}", tableHtml.ToString());
-
-        return new()
+        if (!statistics.Any()) return new()
         {
             Type = "rich_media",
-            Buttons = new HashSet<InteractiveMediaButton>()
-            {
-                new()
-                {
-                    ActionType="none",
-                    ActionBody="",
-                    Text = tableHtml.ToString()
-                }
-            }
+            Buttons = new HashSet<InteractiveMediaButton>() { new() { ActionType = "none", ActionBody = "", Text = "Nothing to show" } }
         };
+
+        var result = new InteractiveMedia()
+        {
+            Type = "rich_media",
+            ButtonsGroupRows = 6
+        };
+
+        // First block in carousel
+        // Headers
+        result.Buttons.Add(new()
+        {
+            Columns = 2,
+            ActionType = "none",
+            ActionBody = "",
+            Text = ""
+        });
+        result.Buttons.Add(new()
+        {
+            Columns = 4,
+            ActionType = "none",
+            ActionBody = "",
+            Text = "Date"
+        });
+
+        // Content
+        byte count = 0;
+        foreach (var stat in statistics)
+        {
+            result.Buttons.Add(new()
+            {
+                Columns = 2,
+                ActionType = "none",
+                ActionBody = "",
+                Text = (++count).ToString()
+            });
+            result.Buttons.Add(new()
+            {
+                Columns = 4,
+                ActionType = "none",
+                ActionBody = "",
+                Text = stat.StartTimeUtc.AddHours(utcOffset).ToString("dd.MM.yy hh:mm")
+            });
+        }
+
+        // Second block in carousel
+        // Headers
+        result.Buttons.Add(new()
+        {
+            Columns = 3,
+            ActionType = "none",
+            ActionBody = "",
+            Text = "Distance (metres)"
+        });
+        result.Buttons.Add(new()
+        {
+            Columns = 3,
+            ActionType = "none",
+            ActionBody = "",
+            Text = "Duration"
+        });
+
+        // Content
+        foreach (var stat in statistics)
+        {
+
+            result.Buttons.Add(new()
+            {
+                Columns = 3,
+                ActionType = "none",
+                ActionBody = "",
+                Text = $"{stat.DistanceMetres:N0}"
+            });
+            result.Buttons.Add(new()
+            {
+                Columns = 3,
+                ActionType = "none",
+                ActionBody = "",
+                Text = $"{stat.Duration.TotalHours:N0} hrs {stat.Duration.Minutes} min"
+            });
+        }
+
+        return result;
     }
 
     private readonly ViberApiHttpClient _httpClient;
-    private readonly TrackService _service;
-    private readonly ILogger<ViberApiService> _logger;
+    private readonly ITrackService _service;
 }

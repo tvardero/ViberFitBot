@@ -9,7 +9,7 @@ public class DialogState
     {
         NotSpecified = 0,
         MainMenu = NotSpecified,
-        Top10_WaitingForImei,
+        Top5_WaitingForImei,
         TotalStatistics_WaitingForImei,
         StatisticsOfDay_WaitingForImei,
         StatisticsOfDay_WaitingForDate

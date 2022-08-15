@@ -11,9 +11,9 @@ public static class Keyboards
         {
             new()
             {
-                Text = "🔟 Top 10 trips",
+                Text = "5️⃣ Top 5 trips",
                 ActionType = "reply",
-                ActionBody = Actions.Top10Action
+                ActionBody = Actions.Top5Action
             },
             new()
             {

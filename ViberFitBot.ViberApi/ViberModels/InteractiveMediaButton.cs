@@ -12,4 +12,7 @@ public class InteractiveMediaButton
 
     [JsonPropertyName("Text")]
     public string Text { get; init; } = null!;
+
+    [JsonPropertyName("Columns")]
+    public int Columns { get; init; } = 6;
 }

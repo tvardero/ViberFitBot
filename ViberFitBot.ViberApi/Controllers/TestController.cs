@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using ViberFitBot.ViberApi.Resources;
 using ViberFitBot.ViberApi.Services;
 
 namespace ViberFitBot.WebApi.Controllers;
@@ -7,16 +8,16 @@ namespace ViberFitBot.WebApi.Controllers;
 [ApiController, Route("api/test")]
 public class TestController : ControllerBase
 {
-    public TestController(TrackService service)
+    public TestController(ITrackService service)
     {
         _service = service;
     }
 
-    [HttpGet("Top10")]
-    public async Task<IActionResult> GetTop10(string imei, TrackService.SortBy sortBy = TrackService.SortBy.Distance)
+    [HttpGet("Top5")]
+    public async Task<IActionResult> GetTop5(string imei, TrackServiceSortBy sortBy = TrackServiceSortBy.Distance)
     {
-        var top10 = await _service.GetTop10TracksAsync(imei, sortBy);
-        return Ok(top10);
+        var top5 = await _service.GetTop5TracksAsync(imei, sortBy);
+        return Ok(top5);
     }
 
     [HttpGet("StatisticsOfPeriod")]
@@ -46,6 +47,5 @@ public class TestController : ControllerBase
         return Ok();
     }
 
-
-    private readonly TrackService _service;
+    private readonly ITrackService _service;
 }

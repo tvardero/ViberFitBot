@@ -1,22 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using ViberFitBot.ViberApi.Models;
+using ViberFitBot.ViberApi.Resources;
 
 namespace ViberFitBot.ViberApi.Services;
 
-public class TrackService
+public class TrackServiceWithLinqToEntities : ITrackService
 {
-    public enum SortBy
-    {
-        NotSpecified = 0,
-        Id = NotSpecified,
-        StartTime,
-        Duration,
-        Distance
-    }
 
     public const int CreateTrackWhenTimePassedMinutes = 30;
 
-    public TrackService(TrackContext ctx)
+    public TrackServiceWithLinqToEntities(TrackContext ctx)
     {
         _ctx = ctx;
     }
@@ -71,7 +64,7 @@ public class TrackService
             .Include(t => t.FirstData)
             .Include(t => t.LatestData)
             .Where(t => t.Imei == tl.Imei)
-            .OrderBy(t => t.Id)
+            .OrderBy(t => t.StartTimeUtc)
             .LastOrDefaultAsync();
 
         if (track != null && track.LatestData.DateTrack.AddMinutes(CreateTrackWhenTimePassedMinutes) >= tl.DateTrack)
@@ -123,7 +116,7 @@ public class TrackService
         return await GetStatisticsFromQuery(query);
     }
 
-    public async Task<IEnumerable<Track>> GetTop10TracksAsync(string imei, SortBy sortBy = SortBy.Distance)
+    public async Task<IEnumerable<Track>> GetTop5TracksAsync(string imei, TrackServiceSortBy sortBy = TrackServiceSortBy.Distance)
     {
         var query = _ctx.Tracks
             .Where(t => t.Imei == imei)
@@ -131,13 +124,13 @@ public class TrackService
 
         query = sortBy switch
         {
-            SortBy.StartTime => query.OrderByDescending(t => t.StartTimeUtc),
-            SortBy.Duration => query.OrderByDescending(t => t.Duration),
-            SortBy.Distance => query.OrderByDescending(t => t.DistanceMetres),
+            TrackServiceSortBy.StartTime => query.OrderByDescending(t => t.StartTimeUtc),
+            TrackServiceSortBy.Duration => query.OrderByDescending(t => t.Duration),
+            TrackServiceSortBy.Distance => query.OrderByDescending(t => t.DistanceMetres),
             _ => query.OrderByDescending(t => t.Id)
         };
 
-        return await query.Take(10).ToListAsync();
+        return await query.Take(5).ToListAsync();
     }
 
     private static async Task<TrackStatistics> GetStatisticsFromQuery(IQueryable<Track> query)

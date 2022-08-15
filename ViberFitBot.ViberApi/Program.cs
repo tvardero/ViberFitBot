@@ -38,7 +38,7 @@ static void ConfigureApplicationBuilder(WebApplicationBuilder builder)
     builder.Services.AddSingleton<ViberApiHttpClient>(services => new(builder.Configuration, services.GetRequiredService<ILogger<ViberApiHttpClient>>()));
     builder.Services.AddScoped<ViberSignatureValidationFilter>();
     builder.Services.AddScoped<ViberApiService>();
-    builder.Services.AddScoped<TrackService>();
+    builder.Services.AddScoped<ITrackService, TrackServiceWithLinqToEntities>();
 
     builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     {
@@ -100,14 +100,14 @@ static async Task CheckTracksTableSeeded(TrackContext ctx)
         {
             var track = tracks
                 .Where(t => t.Imei == tl.Imei)
-                .OrderBy(t => t.Id)
+                .OrderBy(t => t.StartTimeUtc)
                 .LastOrDefault();
 
-            if (track != null && track.LatestData.DateTrack.AddMinutes(TrackService.CreateTrackWhenTimePassedMinutes) >= tl.DateTrack)
+            if (track != null && track.LatestData.DateTrack.AddMinutes(TrackServiceWithLinqToEntities.CreateTrackWhenTimePassedMinutes) >= tl.DateTrack)
             {
                 // If track exists and time passed <= 30 mins: update latest track data of the user
                 track.Duration = tl.DateTrack - track.FirstData.DateTrack;
-                track.DistanceMetres += TrackService.GetDistanceBetweenPoints(track.LatestData, tl);
+                track.DistanceMetres += TrackServiceWithLinqToEntities.GetDistanceBetweenPoints(track.LatestData, tl);
 
                 track.LatestData = tl;
             }
