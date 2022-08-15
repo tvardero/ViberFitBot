@@ -15,4 +15,13 @@ public class InteractiveMediaButton
 
     [JsonPropertyName("Columns")]
     public int Columns { get; init; } = 6;
+
+    [JsonPropertyName("Rows")]
+    public int Rows { get; init; } = 1;
+
+    [JsonPropertyName("TextVAlign")]
+    public string TextVAlign { get; init; } = "top";
+
+    [JsonPropertyName("Frame")]
+    public object? Frame { get; init; } = null;
 }

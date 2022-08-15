@@ -15,13 +15,6 @@ public class ViberApiService
         _service = service;
     }
 
-    // Handles both "conversation_started" and "subscribed" events
-    public async Task HandleConversationStartedCallback(ConversationStartedCallback callback)
-    {
-        State.Remove(callback.User.Id);
-        await _httpClient.SendWelcomeMessage(Responses.WelcomeMessage, Keyboards.MainMenuKeyboard);
-    }
-
     // Handles "message" event
     public async Task HandleMessageCallback(MessageCallback callback)
     {
@@ -169,46 +162,52 @@ public class ViberApiService
             Buttons = new HashSet<InteractiveMediaButton>() { new() { ActionType = "none", ActionBody = "", Text = "Nothing to show" } }
         };
 
+        if (statistics.Count() > 6) throw new InvalidOperationException("Unable to create more than 7 table rows (including header)");
+
         var result = new InteractiveMedia()
         {
             Type = "rich_media",
-            ButtonsGroupRows = 6
+            ButtonsGroupRows = 1 + statistics.Count()
         };
 
         // First block in carousel
         // Headers
         result.Buttons.Add(new()
         {
-            Columns = 2,
+            Columns = 1,
             ActionType = "none",
             ActionBody = "",
-            Text = ""
+            Text = "",
+            Frame = new { }
         });
         result.Buttons.Add(new()
         {
-            Columns = 4,
+            Columns = 5,
             ActionType = "none",
             ActionBody = "",
-            Text = "Date"
+            Text = "Date",
+            Frame = new { }
         });
 
         // Content
-        byte count = 0;
+        byte i = 1;
         foreach (var stat in statistics)
         {
             result.Buttons.Add(new()
             {
-                Columns = 2,
+                Columns = 1,
                 ActionType = "none",
                 ActionBody = "",
-                Text = (++count).ToString()
+                Text = i++.ToString(),
+                Frame = new { }
             });
             result.Buttons.Add(new()
             {
-                Columns = 4,
+                Columns = 5,
                 ActionType = "none",
                 ActionBody = "",
-                Text = stat.StartTimeUtc.AddHours(utcOffset).ToString("dd.MM.yy hh:mm")
+                Text = stat.StartTimeUtc.AddHours(utcOffset).ToString("dd.MM.yyyy hh:mm:ss"),
+                Frame = new { }
             });
         }
 
@@ -219,33 +218,36 @@ public class ViberApiService
             Columns = 3,
             ActionType = "none",
             ActionBody = "",
-            Text = "Distance (metres)"
+            Text = "Distance (metres)",
+            Frame = new { }
         });
         result.Buttons.Add(new()
         {
             Columns = 3,
             ActionType = "none",
             ActionBody = "",
-            Text = "Duration"
+            Text = "Duration",
+            Frame = new { }
         });
 
         // Content
         foreach (var stat in statistics)
         {
-
             result.Buttons.Add(new()
             {
                 Columns = 3,
                 ActionType = "none",
                 ActionBody = "",
-                Text = $"{stat.DistanceMetres:N0}"
+                Text = $"{stat.DistanceMetres:N0}",
+                Frame = new { }
             });
             result.Buttons.Add(new()
             {
                 Columns = 3,
                 ActionType = "none",
                 ActionBody = "",
-                Text = $"{stat.Duration.TotalHours:N0} hrs {stat.Duration.Minutes} min"
+                Text = $"{stat.Duration.TotalHours:N0} hrs {stat.Duration.Minutes} min",
+                Frame = new { }
             });
         }
 

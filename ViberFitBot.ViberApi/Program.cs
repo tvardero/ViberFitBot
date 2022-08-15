@@ -5,7 +5,6 @@ using ViberFitBot.ViberApi.Infrastructure;
 using ViberFitBot.ViberApi.Models;
 using ViberFitBot.ViberApi.Services;
 using ViberFitBot.ViberApi.ViberModels;
-using ViberFitBot.WebApi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +35,6 @@ static void ConfigureApplicationBuilder(WebApplicationBuilder builder)
     });
 
     builder.Services.AddSingleton<ViberApiHttpClient>(services => new(builder.Configuration, services.GetRequiredService<ILogger<ViberApiHttpClient>>()));
-    builder.Services.AddScoped<ViberSignatureValidationFilter>();
     builder.Services.AddScoped<ViberApiService>();
     builder.Services.AddScoped<ITrackService, TrackServiceWithLinqToEntities>();
 

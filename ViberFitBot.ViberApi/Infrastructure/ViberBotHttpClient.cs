@@ -70,36 +70,13 @@ public class ViberApiHttpClient : HttpClient
     {
         var sendMessageUrl = _configuration.GetValue<string>("Viber:SendMessage");
 
-        var resultRaw = await this.PostAsJsonAsync(sendMessageUrl, requestBody);
+        var resultRaw = await this.PostAsJsonAsync(sendMessageUrl, requestBody, new System.Text.Json.JsonSerializerOptions() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
 
         var result = await resultRaw.Content.ReadFromJsonAsync<ViberActionResult>();
         if (result?.Status != 0)
         {
             _logger.LogError("Failed to send message, got status {status} and message {message}", result?.Status, result?.StatusMessage);
         }
-    }
-
-    public async Task SendWelcomeMessage(string text, InteractiveMedia? keyboard = null)
-    {
-        if (keyboard != null && keyboard.Type != "keyboard") throw new ArgumentException($"Unallowed type of keyboard: {keyboard.Type}", nameof(keyboard));
-
-        var conversationStartedUrl = _configuration.GetValue<string>("Viber:ConversationStarted");
-        var requestBody = new
-        {
-            type = "text",
-            text,
-            sender = new { name = "ViberFitBot" },
-            keyboard
-        };
-
-        var resultRaw = await this.PostAsJsonAsync(conversationStartedUrl, requestBody);
-
-        var result = await resultRaw.Content.ReadFromJsonAsync<ViberActionResult>();
-        if (result?.Status != 0)
-        {
-            _logger.LogError("Failed to send message, got status {status} and message {message}", result?.Status, result?.StatusMessage);
-        }
-
     }
 
     private readonly IConfiguration _configuration;
